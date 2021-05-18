@@ -1,0 +1,15 @@
+﻿@page "/zoomimage"
+@inject IJSRuntime JSRuntime;
+
+
+<br />
+<div id="openseadragon1" style="width: 800px; height: 600px;"></div>
+<button id="btnDrawSelection" class="btn btn-primary">Select ROI</button>
+
+@code { protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeAsync<object>("InitOpenSeadragon", "#openseadragon1");
+        }
+    } }

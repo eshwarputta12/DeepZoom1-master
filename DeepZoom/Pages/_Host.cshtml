@@ -1,0 +1,126 @@
+﻿@page "/"
+@namespace DeepZoom.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{ Layout = null; }
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LMS POC Project</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="DeepZoom.styles.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="~/lib/openseadragon-bin-2.4.2/openseadragon.min.js"></script>
+
+
+</head>
+
+
+
+<body>
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#accordion").click(function () {
+                $(".toggle").children().slideToggle(1000);
+            })
+        });
+    </script>
+    <script type="text/javascript">
+        function InitOpenSeadragon(selector) {
+            $(document).ready(function () {
+                $("#accordion").click(function () {
+                    $(".toggle").children().slideToggle(1000);
+                })
+                var viewer = OpenSeadragon({
+                    id: "openseadragon1",
+                    prefixUrl: "/lib/openseadragon-bin-2.4.2/images/",
+                    tileSources: {
+                        Image: {
+                            xmlns: "http://schemas.microsoft.com/deepzoom/2009",
+                            Url: "/dzi/dzc_output_files/",
+                            Format: "jpg",
+                            Overlap: "2",
+                            TileSize: "256",
+                            Size: {
+                                Height: "9221",
+                                Width: "7026"
+                            }
+                        }
+                    }
+                });
+                var drag;
+                var selectionMode = false;
+
+                new OpenSeadragon.MouseTracker({
+                    element: viewer.element,
+                    pressHandler: function (event) {
+                        if (!selectionMode) {
+                            return;
+                        }
+
+                        var overlayElement = document.createElement('div');
+                        //var overground = document.createElement('div');
+                        overlayElement.style.background = 'rgba(255, 255, 255, 0.0)';
+                        overlayElement.style.border = '1px solid red';
+                        //overground
+                        var viewportPos = viewer.viewport.pointFromPixel(event.position);
+                        viewer.addOverlay(overlayElement, new OpenSeadragon.Rect(viewportPos.x, viewportPos.y, 0, 0));
+
+                        drag = {
+                            overlayElement: overlayElement,
+                            startPos: viewportPos
+                        };
+                    },
+                    dragHandler: function (event) {
+                        if (!drag) {
+                            return;
+                        }
+
+                        var viewportPos = viewer.viewport.pointFromPixel(event.position);
+                        var diffX = viewportPos.x - drag.startPos.x;
+                        var diffY = viewportPos.y - drag.startPos.y;
+
+                        var location = new OpenSeadragon.Rect(
+                            Math.min(drag.startPos.x, drag.startPos.x + diffX),
+                            Math.min(drag.startPos.y, drag.startPos.y + diffY),
+                            Math.abs(diffX),
+                            Math.abs(diffY)
+                        );
+
+                        viewer.updateOverlay(drag.overlayElement, location);
+                    },
+                    releaseHandler: function (event) {
+                        drag = null;
+                        selectionMode = false;
+                        viewer.setMouseNavEnabled(true);
+                    }
+                });
+
+                $(document).on('click', '#btnDrawSelection', function () {
+                    selectionMode = true;
+                    viewer.setMouseNavEnabled(false);
+                });
+            });
+
+        }
+    </script>
+</body>
+</html>
